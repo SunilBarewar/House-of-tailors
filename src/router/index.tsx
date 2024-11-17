@@ -7,12 +7,18 @@ import {
   createBrowserRouter,
 } from "react-router-dom";
 import { pathNames } from "@/constants/pathname";
+import DashboardLayout from "@/components/layout/dashboard-layout";
 
 export const routes = createRoutesFromElements(
   <Route path="/">
-    <Route index element={<Navigate replace to={pathNames.CONVERSATIONS} />} />
-    <Route path={pathNames.CONVERSATIONS} element={<ConversationPage />} />
-    <Route path={pathNames.APPOINTMENTS} element={<AppointmentsPage />} />
+    <Route element={<DashboardLayout />}>
+      <Route
+        index
+        element={<Navigate replace to={pathNames.CONVERSATIONS} />}
+      />
+      <Route path={pathNames.CONVERSATIONS} element={<ConversationPage />} />
+      <Route path={pathNames.APPOINTMENTS} element={<AppointmentsPage />} />
+    </Route>
   </Route>
 );
 
