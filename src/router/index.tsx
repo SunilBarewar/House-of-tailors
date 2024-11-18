@@ -7,7 +7,7 @@ import {
   createBrowserRouter,
 } from "react-router-dom";
 import { pathNames } from "@/constants/pathname";
-import DashboardLayout from "@/components/layout/dashboard-layout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export const routes = createRoutesFromElements(
   <Route path="/">
