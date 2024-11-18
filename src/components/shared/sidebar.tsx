@@ -1,17 +1,40 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { AlignJustify } from "lucide-react";
+import { pathNames } from "@/constants/pathname";
+import {
+  AlignJustify,
+  CalendarFold,
+  CircleX,
+  MessageSquareMore,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import Logo from "./Logo";
+
+interface ILink {
+  title: string;
+  href: string;
+  icon: React.ReactNode;
+}
+
+const links: ILink[] = [
+  {
+    title: "Conversations",
+    href: pathNames.CONVERSATIONS,
+    icon: <MessageSquareMore />,
+  },
+  {
+    title: "Appointments",
+    href: pathNames.APPOINTMENTS,
+    icon: <CalendarFold />,
+  },
+];
 
 function AppSidebar() {
   return (
@@ -21,32 +44,35 @@ function AppSidebar() {
           <AlignJustify className="text-2xl" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="bg-red-100 shadow-none">
+      <SheetContent side="left" className="text-neutral-900">
         <SheetHeader>
-          <SheetTitle>Edit profile</SheetTitle>
-          <SheetDescription>
-            Make changes to your profile here. Click save when you're done.
-          </SheetDescription>
+          <div className="flex justify-between items-center">
+            <SheetTitle>
+              <Logo />
+            </SheetTitle>
+            <SheetClose asChild>
+              <CircleX size={20} color="#1f1f1f" />
+            </SheetClose>
+          </div>
         </SheetHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input id="name" value="Pedro Duarte" className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="username" className="text-right">
-              Username
-            </Label>
-            <Input id="username" value="@peduarte" className="col-span-3" />
-          </div>
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              to={link.href}
+              className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-md text-neutral-800"
+            >
+              <SheetClose asChild>
+                <div className="flex items-center gap-3 font-poppins">
+                  <span>{link.icon}</span>
+                  <span className="font-medium tracking-wide text-neutral-600">
+                    {link.title}
+                  </span>
+                </div>
+              </SheetClose>
+            </Link>
+          ))}
         </div>
-        <SheetFooter>
-          <SheetClose asChild>
-            <Button type="submit">Save changes</Button>
-          </SheetClose>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
