@@ -6,8 +6,18 @@ import { useConversationStore } from "@/stores/conversation.store";
 import { Message } from "@botpress/client";
 import { CircleUser, Send } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import useInfiniteScroll from "react-infinite-scroll-hook";
+import { set } from "zod";
 
 const MessageBox = () => {
   const selectedConversation = useConversationStore(
@@ -27,39 +37,104 @@ export interface IMessagesProps {
 }
 
 const Messages: React.FC<IMessagesProps> = ({ messages }) => {
+  const selectedConversation = useConversationStore(
+    (state) => state.selectedConversation
+  );
+  const [messageList, setMessageList] = useState<Message[]>(messages ?? []);
+  const [loading, setLoading] = useState(false);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [infiniteRef, { rootRef }] = useInfiniteScroll({
+    loading,
+    hasNextPage,
+    onLoadMore: async () => {
+      console.log("load more");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    },
+
+    rootMargin: "400px 0px 0px 0px",
+  });
+  const scrollableRootRef = useRef<React.ComponentRef<"div"> | null>(null);
+  const lastScrollDistanceToBottomRef = useRef<number>();
+
+  const reversedItems = useMemo(
+    () => [...messageList].reverse(),
+    [messageList]
+  );
+  useEffect(() => {
+    setMessageList(selectedConversation?.messages ?? []);
+    setHasNextPage(Boolean(selectedConversation?.nextMessagesToken));
+  }, [selectedConversation]);
+
+  // We keep the scroll position when new items are added etc.
+  useLayoutEffect(() => {
+    const scrollableRoot = scrollableRootRef.current;
+    const lastScrollDistanceToBottom =
+      lastScrollDistanceToBottomRef.current ?? 0;
+    if (scrollableRoot) {
+      scrollableRoot.scrollTop =
+        scrollableRoot.scrollHeight - lastScrollDistanceToBottom;
+    }
+  }, [reversedItems, rootRef]);
+
+  const rootRefSetter = useCallback(
+    (node: HTMLDivElement) => {
+      rootRef(node);
+      scrollableRootRef.current = node;
+    },
+    [rootRef]
+  );
+
+  const handleRootScroll = useCallback(() => {
+    const rootNode = scrollableRootRef.current;
+    if (rootNode) {
+      const scrollDistanceToBottom = rootNode.scrollHeight - rootNode.scrollTop;
+      lastScrollDistanceToBottomRef.current = scrollDistanceToBottom;
+    }
+  }, []);
   return (
     <>
-      <ScrollArea className="messages px-3 h-[var(--message-box-height)] py-1 flex flex-col ">
-        {messages?.map((message, index) => (
-          <div
-            key={index}
-            className={cn(
-              "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 mt-2 text-sm",
-              message.direction === "outgoing"
-                ? "ml-auto bg-primary text-primary-foreground"
-                : "bg-muted"
-            )}
-          >
-            {message.payload?.text}
-          </div>
-        ))}
-        {messages?.map((message, index) => (
-          <div
-            key={index}
-            className={cn(
-              "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 mt-2 text-sm",
-              message.direction === "outgoing"
-                ? "ml-auto bg-primary text-primary-foreground"
-                : "bg-muted"
-            )}
-          >
-            {message.payload?.text}
-          </div>
-        ))}
-      </ScrollArea>
+      <div
+        ref={rootRefSetter}
+        onScroll={handleRootScroll}
+        className="messages px-3 h-[var(--message-box-height)] max-h-[var(--message-box-height)] overflow-auto py-3 flex flex-col p"
+      >
+        <ul>
+          {hasNextPage && <div ref={infiniteRef}>Loading...</div>}
+          {reversedItems?.map((message, index) => (
+            <ListItem
+              key={message.id + Math.random()}
+              message={message}
+              index={index}
+            />
+          ))}
+        </ul>
+      </div>
     </>
   );
 };
+
+interface ListItemProps {
+  children?: React.ReactNode;
+  message: Message;
+  index: number;
+}
+export const ListItem = forwardRef<React.ComponentRef<"li">, ListItemProps>(
+  function ListItem({ message, index }, ref) {
+    return (
+      <li
+        ref={ref}
+        className={cn(
+          "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 mt-2 text-sm",
+          message.direction === "outgoing"
+            ? "ml-auto bg-primary text-primary-foreground"
+            : "bg-muted"
+        )}
+      >
+        Message {index} {message.payload?.text}
+      </li>
+    );
+  }
+);
 
 const MessageHeader = () => {
   return (

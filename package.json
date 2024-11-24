@@ -27,9 +27,11 @@
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
     "react-infinite-scroll-component": "^6.1.0",
+    "react-infinite-scroll-hook": "^5.0.1",
     "react-router-dom": "^6.28.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8",
     "zustand": "^5.0.1"
   },
   "devDependencies": {
