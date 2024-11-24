@@ -1,15 +1,15 @@
+import { IAuthData } from "@/types/user.types";
 import { create } from "zustand";
 
-interface AuthStore {
-  token: string | null;
-  login: (newToken: string) => void;
+interface IAuthStore {
+  user: IAuthData | null;
+  login: (authData: IAuthData) => void;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
-  token: null,
+export const useAuthStore = create<IAuthStore>((set) => ({
+  user: null,
+  login: (authData: IAuthData) => set({ user: authData }),
 
-  login: (newToken) => set({ token: newToken }),
-
-  logout: () => set({ token: null }),
+  logout: () => set({ user: null }),
 }));
