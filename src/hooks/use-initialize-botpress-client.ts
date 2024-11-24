@@ -10,7 +10,7 @@ const useInitializeBotpressClient = () => {
 
   useEffect(() => {
     if (botpressClient) return;
-    console.log("Creating botpress client");
+
     const creds = getBotpressCredentials();
     createClient(creds.token, creds.workspaceId, creds.botId);
   }, [createClient, botpressClient]);

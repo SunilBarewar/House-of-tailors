@@ -57,6 +57,7 @@ export default {
       },
       height: {
         navbar: "var(--navbar-height)",
+        "conversation-container": "!h-[calc(100vh-var(--navbar-height))]",
       },
     },
   },

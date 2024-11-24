@@ -42,7 +42,13 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
+    /* Height variables */
     --navbar-height: 3.5rem;
+    --message-input-height: 2.5rem;
+    --message-box-header: 3rem;
+    --message-box-height: calc(
+      100% - var(--message-box-header) - var(--message-input-height)
+    );
   }
 
   .dark {
@@ -92,4 +98,8 @@
 
 #root {
   @apply h-screen overflow-hidden w-full !font-poppins;
+}
+
+.messages-box .messages > [data-radix-scroll-area-viewport] > div {
+  display: block !important;
 }
