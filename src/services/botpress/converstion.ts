@@ -1,5 +1,7 @@
 import { IConversationWithOptionalMessages } from "@/interface/botpress.interface";
 import { Client } from "@botpress/client";
+import { getUsers } from "./user";
+import { sortMessages } from "@/lib/utils";
 
 export const getConversations = async (
   client: Client,
@@ -29,9 +31,19 @@ export async function getConversationsWithMessages(
     nextToken: nextConversationsToken,
   });
 
-  const conversations: IConversationWithOptionalMessages[] =
+  let conversations: IConversationWithOptionalMessages[] =
     listRequest.conversations;
+  const users = await Promise.all(
+    conversations.map((conversation) => {
+      return getUsers(client, conversation.id);
+    })
+  );
 
+  conversations = conversations.map((conversation, index) => {
+    conversation.users = users[index].users;
+    return conversation;
+  });
+  console.log("conversations with users", conversations);
   if (hideEmptyConversations) {
     const conversationsWithMessages = await filterOutEmptyConversations(
       client,
@@ -87,7 +99,7 @@ export async function filterOutEmptyConversations(
   );
 
   const conversationsWithMessages = conversations.map((conversation, index) => {
-    conversation.messages = messages[index].messages;
+    conversation.messages = sortMessages(messages[index].messages);
     conversation.nextMessagesToken = messages[index].nextMessagesToken;
     return conversation;
   });
@@ -95,4 +107,56 @@ export async function filterOutEmptyConversations(
   return conversationsWithMessages.filter(
     (conversation) => conversation.messages!.length > 0
   );
+}
+
+export async function listMessages(
+  client: Client,
+  conversationId: string,
+  nextMessagesToken?: string | undefined
+) {
+  const messageList = await client.listMessages({
+    conversationId,
+    nextToken: nextMessagesToken,
+  });
+  console.log("listMessages", messageList.messages);
+
+  return {
+    messages: messageList.messages,
+    nextMessagesToken: messageList.meta.nextToken,
+  };
+}
+
+export async function getConversationsWithMessagesAndUsers(
+  client: Client,
+  nextConversationsToken: string = "",
+  hideEmptyConversations: boolean = true
+): Promise<{
+  conversations: IConversationWithOptionalMessages[];
+  nextConversationsToken?: string;
+}> {
+  // should use the listConversationsWithMessages function
+
+  const listRequest = await client.listConversations({
+    nextToken: nextConversationsToken,
+  });
+
+  let conversations: IConversationWithOptionalMessages[] =
+    listRequest.conversations;
+
+  if (hideEmptyConversations) {
+    const conversationsWithMessages = await filterOutEmptyConversations(
+      client,
+      conversations
+    );
+
+    return {
+      conversations: conversationsWithMessages,
+      nextConversationsToken: listRequest.meta.nextToken,
+    };
+  }
+
+  return {
+    conversations,
+    nextConversationsToken: listRequest.meta.nextToken,
+  };
 }

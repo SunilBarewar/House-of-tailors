@@ -1,3 +1,4 @@
+import { Message } from "@botpress/client";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -28,4 +29,10 @@ export function setLocalStorageItem(key: string, data: unknown) {
 export function getLocalStorageItem(key: string) {
   const value = localStorage?.getItem(key);
   return value ? JSON.parse(value) : null;
+}
+
+export function sortMessages(messages: Message[]) {
+  return messages.sort((a, b) => {
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
 }
