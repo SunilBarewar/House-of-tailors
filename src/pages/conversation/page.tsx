@@ -23,7 +23,11 @@ const ConversationPage = () => {
           <ConversationInfo />
         </>
       ) : (
-        <div>Select a conversation to start chat</div>
+        <div className="flex-grow flex items-center justify-center">
+          <span className="text-2xl bg-gray-100 text-slate-700 px-5 py-3 rounded">
+            Select a conversation to start chat
+          </span>
+        </div>
       )}
     </div>
   );
