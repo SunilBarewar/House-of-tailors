@@ -1,69 +1,120 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { messageDirections } from "@/constants/botpress";
+import { formatDateAndTime } from "@/lib/date";
+import { cn, sortMessages } from "@/lib/utils";
+import { listMessages } from "@/services/botpress/converstion";
+import { useBotpressClientStore } from "@/stores";
 import { useConversationStore } from "@/stores/conversation.store";
 import { Message } from "@botpress/client";
 import { CircleUser, Send } from "lucide-react";
-import InfiniteScroll from "react-infinite-scroll-component";
 import {
   forwardRef,
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import toast from "react-hot-toast";
 import useInfiniteScroll from "react-infinite-scroll-hook";
-import { set } from "zod";
 
 const MessageBox = () => {
   const selectedConversation = useConversationStore(
     (state) => state.selectedConversation
   );
+  const messages = useConversationStore((state) => state.messages ?? []);
+
+  const [botpressBotIdAsAUser, setBotpressBotIdAsAUser] = useState<string>("");
+
+  useEffect(() => {
+    // sets the botpress bot id as a user by searching all messages
+    messages.forEach((message) => {
+      if (message.direction === messageDirections.outgoing) {
+        setBotpressBotIdAsAUser(message.userId);
+      }
+    });
+  }, [messages]);
   return (
     <Card className="messages-box flex-grow w-[60%] max-w-[60%] bg-white px-2 h-conversation-container py-2 border-none shadow-none">
       <MessageHeader />
-      <Messages messages={selectedConversation?.messages} />
-      <MessageInput />
+      <Messages botpressBotIdAsAUser={botpressBotIdAsAUser} />
+      <MessageInput
+        botpressBotIdAsAUser={botpressBotIdAsAUser}
+        conversationId={selectedConversation?.id}
+      />
     </Card>
   );
 };
 
 export interface IMessagesProps {
-  messages: Message[] | undefined;
+  botpressBotIdAsAUser: string;
 }
 
-const Messages: React.FC<IMessagesProps> = ({ messages }) => {
-  const selectedConversation = useConversationStore(
-    (state) => state.selectedConversation
+const Messages: React.FC<IMessagesProps> = ({ botpressBotIdAsAUser }) => {
+  const conversationStore = useConversationStore((state) => state);
+  const botpressClient = useBotpressClientStore(
+    (state) => state.botpressClient
   );
-  const [messageList, setMessageList] = useState<Message[]>(messages ?? []);
+
+  // const [messageList, setMessageList] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasNextPage, setHasNextPage] = useState(
+    Boolean(conversationStore?.nextMessagesToken)
+  );
+  console.log("hasNextPage", hasNextPage);
+  console.log("messages", conversationStore?.messages);
+  const fetchMessages = async () => {
+    if (!botpressClient) {
+      return toast.error("Botpress client not initialized");
+    }
+    if (!conversationStore.selectedConversation) {
+      return toast.error("No conversation selected");
+    }
+
+    setLoading(true);
+    try {
+      const messagesData = await listMessages(
+        botpressClient,
+        conversationStore.selectedConversation?.id,
+        conversationStore?.nextMessagesToken
+      );
+
+      // setMessageList([...messagesData.messages, ...messageList]);
+      conversationStore.setMessages(sortMessages([...messagesData.messages]));
+      conversationStore.updateNextMessagesToken(messagesData.nextMessagesToken);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch messages");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [infiniteRef, { rootRef }] = useInfiniteScroll({
     loading,
-    hasNextPage,
-    onLoadMore: async () => {
-      console.log("load more");
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    },
+    hasNextPage: Boolean(conversationStore?.nextMessagesToken),
+    onLoadMore: fetchMessages,
 
     rootMargin: "400px 0px 0px 0px",
   });
   const scrollableRootRef = useRef<React.ComponentRef<"div"> | null>(null);
   const lastScrollDistanceToBottomRef = useRef<number>();
 
-  const reversedItems = useMemo(
-    () => [...messageList].reverse(),
-    [messageList]
-  );
+  // const reversedItems = useMemo(
+  //   () => [...messageList].reverse(),
+  //   [messageList]
+  // );
+
   useEffect(() => {
-    setMessageList(selectedConversation?.messages ?? []);
-    setHasNextPage(Boolean(selectedConversation?.nextMessagesToken));
-  }, [selectedConversation]);
+    // setMessageList(selectedConversation?.messages ?? []);
+    // console.log(
+    //   "selectedConversation",
+    //   selectedConversation?.nextMessagesToken
+    // );
+    setHasNextPage(Boolean(conversationStore.nextMessagesToken));
+  }, [conversationStore.nextMessagesToken]);
 
   // We keep the scroll position when new items are added etc.
   useLayoutEffect(() => {
@@ -74,7 +125,7 @@ const Messages: React.FC<IMessagesProps> = ({ messages }) => {
       scrollableRoot.scrollTop =
         scrollableRoot.scrollHeight - lastScrollDistanceToBottom;
     }
-  }, [reversedItems, rootRef]);
+  }, [conversationStore.messages, rootRef]);
 
   const rootRefSetter = useCallback(
     (node: HTMLDivElement) => {
@@ -83,6 +134,13 @@ const Messages: React.FC<IMessagesProps> = ({ messages }) => {
     },
     [rootRef]
   );
+
+  // useLayoutEffect(() => {
+  //   const scrollableRoot = scrollableRootRef.current;
+  //   if (scrollableRoot) {
+  //     scrollableRoot.scrollTop = 0;
+  //   }
+  // }, [conversationStore.selectedConversation]);
 
   const handleRootScroll = useCallback(() => {
     const rootNode = scrollableRootRef.current;
@@ -100,7 +158,7 @@ const Messages: React.FC<IMessagesProps> = ({ messages }) => {
       >
         <ul>
           {hasNextPage && <div ref={infiniteRef}>Loading...</div>}
-          {reversedItems?.map((message, index) => (
+          {conversationStore.messages?.map((message, index) => (
             <ListItem
               key={message.id + Math.random()}
               message={message}
@@ -119,24 +177,37 @@ interface ListItemProps {
   index: number;
 }
 export const ListItem = forwardRef<React.ComponentRef<"li">, ListItemProps>(
-  function ListItem({ message, index }, ref) {
+  function ListItem({ message }, ref) {
     return (
       <li
         ref={ref}
         className={cn(
-          "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 mt-2 text-sm",
+          "flex w-max max-w-[60%] flex-col gap-1 rounded-lg px-3 py-2 mt-2 text-sm",
           message.direction === "outgoing"
             ? "ml-auto bg-primary text-primary-foreground"
             : "bg-muted"
         )}
       >
-        Message {index} {message.payload?.text}
+        <p> {message.payload?.text}</p>
+        <p
+          className={cn(
+            "text-[0.6rem] text-right italic",
+            message.direction === messageDirections.outgoing
+              ? "text-gray-50"
+              : "text-muted-foreground"
+          )}
+        >
+          {formatDateAndTime(message.createdAt)}
+        </p>
       </li>
     );
   }
 );
 
 const MessageHeader = () => {
+  const selectedConversation = useConversationStore(
+    (state) => state.selectedConversation
+  );
   return (
     <CardHeader className="flex flex-row items-center h-[var(--message-box-header)] border-b ">
       {/* {selectedConversation?.channel} */}
@@ -146,23 +217,63 @@ const MessageHeader = () => {
         </div>
         <div>
           <p className="text-sm font-medium leading-none">Sofia Davis</p>
-          <p className="text-sm text-muted-foreground">m@example.com</p>
+          <p className="text-sm text-muted-foreground">
+            {selectedConversation?.id}
+          </p>
         </div>
       </div>
     </CardHeader>
   );
 };
 
-const MessageInput = () => {
-  const [input, setInput] = useState("");
+type IMessageInputProps = {
+  botpressBotIdAsAUser: string;
+  conversationId: string;
+};
+const MessageInput: React.FC<IMessageInputProps> = ({
+  botpressBotIdAsAUser,
+  conversationId,
+}) => {
+  const botpressClient = useBotpressClientStore(
+    (state) => state.botpressClient
+  );
+
+  const setMessages = useConversationStore((state) => state.setMessages);
+  const messages = useConversationStore((state) => state.messages);
+
+  const [messageInput, setMessageInput] = useState("");
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+
+  const handleSendMessage = async () => {
+    if (!conversationId) {
+      return toast.error("No conversation selected");
+    }
+    if (!botpressBotIdAsAUser) {
+      return toast.error("No botpress bot id as a user present");
+    }
+    try {
+      const response = await botpressClient?.createMessage({
+        conversationId,
+        userId: botpressBotIdAsAUser!,
+        payload: { text: messageInput },
+        type: "text",
+        tags: {},
+      });
+      if (response?.message) {
+        console.log("response", response);
+        setMessages(sortMessages([...messages, response.message]));
+        setMessageInput("");
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
   return (
     <>
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          if (!input?.length) return;
-
-          setInput("");
+          handleSendMessage();
         }}
         className="flex w-full items-center space-x-2"
       >
@@ -171,12 +282,12 @@ const MessageInput = () => {
           placeholder="Type your message..."
           className="flex-1 h-[var(--message-input-height)]"
           autoComplete="off"
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
+          value={messageInput}
+          onChange={(event) => setMessageInput(event.target.value)}
         />
-        <Button type="submit" size="icon" disabled={!input}>
+        <Button type="submit" size="icon" disabled={!messageInput}>
           <Send />
-          <span className="sr-only">Send</span>
+          <span className="sr-only animate-spin">Send</span>
         </Button>
       </form>
     </>
