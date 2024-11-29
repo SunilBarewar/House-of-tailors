@@ -40,12 +40,11 @@ const ConversationList = () => {
         nextConversationsToken
       );
       setConversationList(
-        [...conversations.conversations].sort(
+        [...conversations.conversations, ...conversationList].sort(
           (a, b) =>
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         )
       );
-      console.log("conversations", conversations);
       setNextConversationsToken(conversations.nextConversationsToken);
     } catch (error: unknown) {
       setError(true);
@@ -65,7 +64,7 @@ const ConversationList = () => {
     loading: loadingNextConversations,
     hasNextPage: Boolean(nextConversationsToken),
     onLoadMore: async () => {
-      if (!botpressClient || loading) return;
+      if (!botpressClient || loading || !nextConversationsToken) return;
       setLoadingNextConversations(true);
       fetchConversationsWithMessages(botpressClient, nextConversationsToken);
       setLoadingNextConversations(false);
