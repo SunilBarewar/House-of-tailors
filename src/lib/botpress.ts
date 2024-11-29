@@ -58,5 +58,6 @@ export const getFormattedConversationInfo = (
     lastUpdatedAt,
     lastMessage,
     userName,
+    botpressBotIdAsAUser: botUserId,
   };
 };
