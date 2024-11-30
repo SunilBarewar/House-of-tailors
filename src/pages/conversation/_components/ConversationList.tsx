@@ -6,6 +6,7 @@ import { Client } from "@botpress/client";
 import { useEffect, useState } from "react";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import ConversationItem from "./ConversationItem";
+import ConversationListLoader from "./loaders/ConversationListLoader";
 
 const ConversationList = () => {
   const setConversationList = useConversationStore(
@@ -73,7 +74,7 @@ const ConversationList = () => {
     rootMargin: "0px 0px 300px 0px",
   });
 
-  if (loading) return <div className="w-[20%] flex-shrink-0">Loading...</div>;
+  if (loading) return <ConversationListLoader />;
 
   if (error) {
     return (

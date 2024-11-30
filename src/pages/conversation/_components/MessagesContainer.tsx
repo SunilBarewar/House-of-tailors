@@ -46,7 +46,9 @@ const MessagesContainer: React.FC<IMessagesProps> = () => {
       );
 
       // setMessageList([...messagesData.messages, ...messageList]);
-      conversationStore.setMessages(sortMessages([...messagesData.messages]));
+      conversationStore.setMessages(
+        sortMessages([...messagesData.messages, ...conversationStore.messages])
+      );
       conversationStore.updateNextMessagesToken(messagesData.nextMessagesToken);
     } catch (error) {
       toast.error("Failed to fetch messages");
@@ -108,17 +110,13 @@ const MessagesContainer: React.FC<IMessagesProps> = () => {
           {hasNextPage && (
             <div
               ref={infiniteRef}
-              className="text-center px-2 py-3 mt-4 border rounded"
+              className="text-center px-2 py-2 mt-4 border rounded"
             >
               Loading messages...
             </div>
           )}
-          {conversationStore.messages?.map((message, index) => (
-            <MessageItem
-              key={message.id + Math.random()}
-              message={message}
-              index={index}
-            />
+          {conversationStore.messages?.map((message) => (
+            <MessageItem key={message.id} message={message} />
           ))}
         </ul>
       </div>

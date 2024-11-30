@@ -7,7 +7,6 @@ import { forwardRef } from "react";
 interface MessageItemProps {
   children?: React.ReactNode;
   message: Message;
-  index: number;
 }
 
 export const MessageItem = forwardRef<
