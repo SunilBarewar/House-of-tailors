@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
-import Navbar from "@/components/shared/Navbar";
 import { Card } from "@/components/ui/card";
 import { useAuthStore } from "@/stores";
+import Navbar from "../shared/Navbar";
 
 const DashboardLayout = () => {
   const user = useAuthStore((state) => state.user);
