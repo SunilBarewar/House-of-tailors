@@ -1,8 +1,8 @@
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import AppSidebar from "./Sidebar";
+import AppSidebar from "./sidebar";
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
   return (
     <Card className="flex w-full justify-between py-2 px-3 rounded-none shadow-none border-t-0 border-x-0 border-b border-solid border-gray-200 h-navbar">
       <div className="flex gap-3 items-center">

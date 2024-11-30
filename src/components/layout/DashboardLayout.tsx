@@ -1,9 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { useAuthStore } from "@/stores";
-import Navbar from "../shared/Navbar";
+import Navbar from "@/components/shared/navbar";
 
-const DashboardLayout = () => {
+const DashboardLayout: React.FC = () => {
   const user = useAuthStore((state) => state.user);
 
   if (!user) {

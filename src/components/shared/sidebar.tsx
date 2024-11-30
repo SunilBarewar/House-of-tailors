@@ -36,7 +36,7 @@ const links: ILink[] = [
   },
 ];
 
-function AppSidebar() {
+const AppSidebar: React.FC = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -76,6 +76,6 @@ function AppSidebar() {
       </SheetContent>
     </Sheet>
   );
-}
+};
 
 export default AppSidebar;
