@@ -1,15 +1,10 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { useAuthStore } from "@/stores";
 import Navbar from "@/components/shared/navbar";
+import { Card } from "@/components/ui/card";
+import useInitializeBotpressClient from "@/hooks/use-initialize-botpress-client";
+import { Outlet } from "react-router-dom";
 
 const DashboardLayout: React.FC = () => {
-  const user = useAuthStore((state) => state.user);
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
+  useInitializeBotpressClient();
   return (
     <div className="bg-neutral-50 h-screen w-full flex flex-col justify-between">
       <Navbar />

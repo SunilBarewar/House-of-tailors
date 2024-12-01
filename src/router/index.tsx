@@ -10,20 +10,22 @@ import {
 } from "react-router-dom";
 
 import AuthPage from "@/pages/auth/page";
-import AppLayout from "@/pages/Layout";
+import RequireAuth from "./gaurds/RequireAuth";
+import PublicGaurd from "./gaurds/PublicGaurd";
 
 export const routes = createRoutesFromElements(
-  <Route element={<AppLayout />}>
-    <Route element={<DashboardLayout />}>
-      <Route
-        index
-        element={<Navigate replace to={pathNames.CONVERSATIONS} />}
-      />
-      <Route path={pathNames.CONVERSATIONS} element={<ConversationPage />} />
-      <Route path={pathNames.APPOINTMENTS} element={<AppointmentsPage />} />
+  <Route path="/">
+    <Route element={<PublicGaurd />}>
+      <Route path={pathNames.LOGIN} element={<AuthPage />} />
     </Route>
 
-    <Route path={pathNames.LOGIN} element={<AuthPage />} />
+    <Route element={<RequireAuth />}>
+      <Route element={<DashboardLayout />}>
+        <Route path="/" element={<Navigate to={pathNames.CONVERSATIONS} />} />
+        <Route path={pathNames.CONVERSATIONS} element={<ConversationPage />} />
+        <Route path={pathNames.APPOINTMENTS} element={<AppointmentsPage />} />
+      </Route>
+    </Route>
   </Route>
 );
 

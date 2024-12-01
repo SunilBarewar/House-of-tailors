@@ -15,10 +15,12 @@ import { setLocalStorageItem } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Navigate, redirect } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
-  const { login, user } = useAuthStore((state) => state);
+  const navigate = useNavigate();
+
+  const login = useAuthStore((state) => state.login);
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -37,12 +39,10 @@ export default function AuthPage() {
       isAuthenticated: true,
     };
     login(authData);
-    redirect(pathNames.CONVERSATIONS);
+    navigate(pathNames.CONVERSATIONS);
     setLocalStorageItem(localStorageKeys.USER_DETAILS, authData);
     toast.success("Logged in successfully");
   };
-
-  if (user) return <Navigate to={pathNames.CONVERSATIONS} />;
 
   return (
     <div className="flex items-center justify-center h-screen">
