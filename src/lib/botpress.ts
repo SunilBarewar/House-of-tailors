@@ -28,9 +28,9 @@ export const cleanAppointmentData = (data: Row[]): IAppointment[] => {
     updatedAt: entry.updatedAt ?? "",
     name: entry.Name || "Unknown", // Fallback to "Unknown" if the name is missing
     location:
-      entry["Location "] === "undefined" ? null : entry["Location "].trim(), // Replace "undefined" with null and trim whitespace
+      entry["Location "] === "undefined" ? null : entry["Location "]?.trim(), // Replace "undefined" with null and trim whitespace
     phoneNumber: entry["Phone Number"] ?? "",
-    appointmentDate: entry["Appoinment Date"] ?? "",
+    appointmentDate: entry["Appoinment date"] ?? entry["Appoinment Date"] ?? "",
   }));
 };
 
