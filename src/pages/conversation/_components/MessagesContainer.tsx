@@ -18,6 +18,9 @@ export interface IMessagesProps {
 }
 
 const MessagesContainer: React.FC<IMessagesProps> = () => {
+  const scrollableRootRef = useRef<React.ComponentRef<"div"> | null>(null);
+  const lastScrollDistanceToBottomRef = useRef<number>();
+
   const conversationStore = useConversationStore((state) => state);
   const botpressClient = useBotpressClientStore(
     (state) => state.botpressClient
@@ -65,8 +68,17 @@ const MessagesContainer: React.FC<IMessagesProps> = () => {
 
     rootMargin: "400px 0px 0px 0px",
   });
-  const scrollableRootRef = useRef<React.ComponentRef<"div"> | null>(null);
-  const lastScrollDistanceToBottomRef = useRef<number>();
+
+  useEffect(() => {
+    const scrollableRoot = scrollableRootRef.current;
+    if (scrollableRoot) {
+      // scrollableRoot.scrollTo({
+      //   behavior: "smooth",
+      //   top: scrollableRoot.scrollHeight,
+      // });
+      scrollableRoot.scrollTop = scrollableRoot.scrollHeight;
+    }
+  }, [conversationStore.selectedConversation]);
 
   useEffect(() => {
     setHasNextPage(Boolean(conversationStore.nextMessagesToken));

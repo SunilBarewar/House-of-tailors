@@ -43,7 +43,7 @@ export async function getConversationsWithMessages(
     conversation.users = users[index].users;
     return conversation;
   });
-  console.log("conversations with users", conversations);
+
   if (hideEmptyConversations) {
     const conversationsWithMessages = await filterOutEmptyConversations(
       client,
@@ -118,7 +118,6 @@ export async function listMessages(
     conversationId,
     nextToken: nextMessagesToken,
   });
-  console.log("listMessages", messageList.messages);
 
   return {
     messages: messageList.messages,
@@ -140,7 +139,7 @@ export async function getConversationsWithMessagesAndUsers(
     nextToken: nextConversationsToken,
   });
 
-  let conversations: IConversationWithOptionalMessages[] =
+  const conversations: IConversationWithOptionalMessages[] =
     listRequest.conversations;
 
   if (hideEmptyConversations) {
