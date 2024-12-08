@@ -34,8 +34,8 @@ jobs:
       # Step 5: Deploy (Customize for Your Environment)
       - name: Deploy to Server
         run: |
-          mkdir -p /var/www/react-app
-          cp -R dist/* /var/www/react-app
+          sudo mkdir -p /var/www/react-app
+          sudo cp -R dist/* /var/www/react-app
         env:
           DEPLOY_PATH: /var/www/react-app # Example deployment directory
 
