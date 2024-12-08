@@ -3,7 +3,7 @@ import { getConversationsWithMessages } from "@/services/botpress/converstion";
 import { useBotpressClientStore } from "@/stores";
 import { useConversationStore } from "@/stores/conversation.store";
 import { Client } from "@botpress/client";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import ConversationItem from "./ConversationItem";
 import ConversationListLoader from "./loaders/ConversationListLoader";
@@ -33,19 +33,25 @@ const ConversationList = () => {
 
   const fetchConversationsWithMessages = async (
     client: Client,
-    nextConversationsToken?: string
+    nextConversationsToken?: string,
+    fromInfiniteScroll: boolean = true
   ) => {
     try {
       const conversations = await getConversationsWithMessages(
         client,
         nextConversationsToken
       );
-      setConversationList(
-        [...conversations.conversations, ...conversationList].sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        )
-      );
+      if (fromInfiniteScroll) {
+        setConversationList(
+          [...conversations.conversations, ...conversationList].sort(
+            (a, b) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          )
+        );
+      } else {
+        setConversationList(conversations.conversations);
+      }
+
       setNextConversationsToken(conversations.nextConversationsToken);
     } catch (error: unknown) {
       setError(true);
@@ -54,10 +60,14 @@ const ConversationList = () => {
       setLoading(false);
     }
   };
+  useLayoutEffect(() => {
+    setConversationList([]);
+    setNextConversationsToken(undefined);
+  }, []);
 
   useEffect(() => {
     if (botpressClient) {
-      fetchConversationsWithMessages(botpressClient);
+      fetchConversationsWithMessages(botpressClient, undefined, false);
     }
   }, []);
 
@@ -67,7 +77,10 @@ const ConversationList = () => {
     onLoadMore: async () => {
       if (!botpressClient || loading || !nextConversationsToken) return;
       setLoadingNextConversations(true);
-      fetchConversationsWithMessages(botpressClient, nextConversationsToken);
+      await fetchConversationsWithMessages(
+        botpressClient,
+        nextConversationsToken
+      );
       setLoadingNextConversations(false);
     },
     disabled: Boolean(error),
